@@ -2,6 +2,7 @@
 (function(){
   var topics=['시장 분위기','팀 생산성','운동 지속','콘텐츠 반응','운세 톤','수면 리듬','집중력','인간관계','카페인 타이밍','브레인스토 운'];;
   var root=document.getElementById('app');
+  var hist=JSON.parse(localStorage.getItem('pp_hist')||'[]');
   var SHARE_BASE='https://hosuman08-netizen.github.io/prediction-pulse/';
   function dayKey(off){
     var d=new Date(); d.setDate(d.getDate()+(off||0));
@@ -43,11 +44,12 @@
     var t=topics[Math.floor(Math.random()*topics.length)];
     var score=40+Math.floor(Math.random()*55);
     var tone=score>75?'강한 모멘텀':score>55?'중립 상승':'관망';
+    try{hist.unshift({t:t,score:score,ts:Date.now()});localStorage.setItem('pp_hist',JSON.stringify(hist.slice(0,12)));}catch(e){}
     var s=bumpStreak();
     var c=s.count||0;
     var ready=!s.shieldLast||((new Date(dayKey(0))-new Date(s.shieldLast))/86400000)>=7;
     root.innerHTML='<div class="card">'
-      +'<div class="chip">가상 엔터</div><div class="chip">오늘 창 '+fomoLeft()+'</div>'
+      +'<div class="chip">가상 엔터</div><div class="chip">오늘 창 '+fomoLeft()+'</div><div class="chip">기록 '+hist.length+'</div>'
       +'<div class="chip">🔥 '+c+'일'+(c>=3&&ready?' · 🛡️':'')+'</div>'
       +'<h2 style="margin:10px 0;color:var(--gold)">'+t+'</h2>'
       +'<div style="font-size:42px;font-weight:800">'+score+'</div><p>'+tone+'</p>'
