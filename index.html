@@ -49,4 +49,7 @@ render();
 try{legionTrack('session_start',{})}catch(e){}
 setInterval(render,60000);
 </script>
+
+<script>if('serviceWorker' in navigator){navigator.serviceWorker.register('./sw.js').catch(function(){});}</script>
+
 </body></html>
