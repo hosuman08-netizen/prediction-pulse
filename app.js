@@ -121,3 +121,6 @@
 })();
 
 /* LEGION_WAVE_18_pipe_ensure */ /* pipe already present wave 18 */
+
+/* LEGION_WAVE_63_share_counter */
+document.addEventListener('click',function(ev){try{var el=ev.target;if(!el)return;var tx=(el.textContent||'')+(el.id||'');if(/share|copy/i.test(tx)||/\uacf5\uc720|\ubcf5\uc0ac/.test(tx)){localStorage.setItem('lw_p26_predicti_share_counter',String((+(localStorage.getItem('lw_p26_predicti_share_counter')||0))+1));}}catch(e){}},true);
