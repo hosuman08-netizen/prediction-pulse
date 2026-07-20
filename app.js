@@ -119,3 +119,5 @@
   try{legionTrack('session_start',{})}catch(e){}
   card();
 })();
+
+/* LEGION_WAVE_18_pipe_ensure */ /* pipe already present wave 18 */
