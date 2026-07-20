@@ -1,6 +1,6 @@
 
 (function(){
-  var topics=['시장 분위기','팀 생산성','운동 지속','콘텐츠 반응','운세 톤','수면 리듬','집중력','인간관계'];
+  var topics=['시장 분위기','팀 생산성','운동 지속','콘텐츠 반응','운세 톤','수면 리듬','집중력','인간관계','카페인 타이밍','브레인스토 운'];;
   var root=document.getElementById('app');
   var SHARE_BASE='https://hosuman08-netizen.github.io/prediction-pulse/';
   function dayKey(off){
