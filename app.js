@@ -1,6 +1,6 @@
 
 (function(){
-  var topics=['시장 분위기','팀 생산성','운동 지속','콘텐츠 반응','운세 톤'];
+  var topics=['시장 분위기','팀 생산성','운동 지속','콘텐츠 반응','운세 톤','수면 리듬','집중력','인간관계'];
   var root=document.getElementById('app');
   function fomoLeft(){
     var end=new Date(); end.setHours(24,0,0,0);
