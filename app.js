@@ -70,6 +70,8 @@
     var ready=!s.shieldLast||((new Date(dayKey(0))-new Date(s.shieldLast))/86400000)>=7;
     var wa=weekAvg();
     var pinnedTopic=localStorage.getItem('pp_pin_topic')||'';
+    var tn=todayN(), ydn=+(localStorage.getItem('pp_day_'+dayKey(-1))||0);
+    var goal=3, gPct=Math.min(100,Math.round(tn/goal*100));
     // 7d score spark from hist
     var sparkHtml='';
     try{
@@ -82,17 +84,20 @@
       }).join('');
     }catch(e){}
     root.innerHTML='<div class="card">'
-      +'<div class="chip">가상 엔터</div><div class="chip">오늘 창 '+fomoLeft()+'</div><div class="chip">오늘 '+todayN()+'회</div>'
+      +'<div class="chip">가상 엔터</div><div class="chip">오늘 창 '+fomoLeft()+'</div><div class="chip">오늘 '+tn+'/'+goal+'</div>'
+      +'<div class="chip">전일 '+(tn-ydn>=0?'+':'')+(tn-ydn)+'</div>'
       +'<div class="chip">기록 '+hist.length+'</div><div class="chip">최고 '+(localStorage.getItem('pp_best')||'-')+'</div>'
       +'<div class="chip">7일 평균 '+(wa||'-')+'</div>'
       +'<div class="chip">🔥 '+c+'일'+(c>=3&&ready?' · 🛡️':'')+'</div>'
       +(pinnedTopic?'<div class="chip">핀 주제 '+pinnedTopic+'</div>':'')
+      +'<div style="height:6px;background:#1c1826;border-radius:4px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;width:'+gPct+'%;background:linear-gradient(90deg,#e0b552,#fbbf24)"></i></div>'
       +'<h2 style="margin:10px 0;color:var(--gold)">'+t+'</h2>'
       +'<div style="font-size:42px;font-weight:800">'+score+'</div><p>'+tone+'</p>'
       +'<p class="sub">재미 예측 · 실투자/실결정 근거 아님</p>'
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 점수 스파크</p>':'')
       +'<button id="again" style="margin-top:12px">다시 뽑기</button> '
       +'<button class="sec" id="pinTopic">주제 핀</button> '
+      +'<button class="sec" id="undoPred">↩ 직전</button> '
       +'<button class="sec" id="share">공유 텍스트</button>'
       +'<div id="sharePeak" style="margin-top:12px;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
       +'<p style="margin:0 0 6px;font-size:13px">✨ '+(score>=80?'강한 모멘텀 직후 — 지금 공유':'결과 나옴 — 한 장 공유')+'</p>'
@@ -130,6 +135,18 @@
       try{localStorage.setItem('pp_pin_topic',t);}catch(e){}
       card({t:t,score:score,tone:tone});
       try{legionTrack('pin',{t:t})}catch(e){}
+    };
+    var up=document.getElementById('undoPred');
+    if(up) up.onclick=function(){
+      if(!hist.length)return;
+      hist.shift();
+      try{localStorage.setItem('pp_hist',JSON.stringify(hist)); localStorage.setItem('pp_day_'+dayKey(0),String(Math.max(0,todayN()-1)));
+        var best=hist.length?Math.max.apply(null,hist.map(function(h){return h.score||0})):'-';
+        localStorage.setItem('pp_best',best);
+      }catch(e){}
+      if(hist[0]) card({t:hist[0].t,score:hist[0].score,tone:hist[0].tone||''});
+      else card({t:'—',score:0,tone:'기록 없음'});
+      try{legionTrack('undo',{})}catch(e){}
     };
     function doShare(){
       var text='Prediction Pulse '+t+' '+score+' · '+shareUrl()+'\n재미 예측 · 실투자 아님';
