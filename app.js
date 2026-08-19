@@ -81,7 +81,11 @@
     lock=lockGet();
     if(reuse){ t=reuse.t; score=reuse.score; tone=reuse.tone||''; locked=true; }
     else if(lock){ t=lock.t; score=lock.p; tone=lock.tone||''; locked=true; }
-    else { t=todayTopic(); score=50; tone=''; locked=false; }
+    else {
+      var picked=''; try{picked=localStorage.getItem('pp_pick_'+dayKey(0))||'';}catch(e){}
+      t=(picked && topics.indexOf(picked)>=0)?picked:todayTopic();
+      score=50; tone=''; locked=false;
+    }
     var s={}; try{s=JSON.parse(localStorage.getItem('pp_streak')||'{}')||{};}catch(e){s={};}
     var c=s.count||0;
     var ready=!s.shieldLast||((new Date(dayKey(0))-new Date(s.shieldLast))/86400000)>=7;
@@ -128,6 +132,10 @@
           ? '<p style="color:var(--'+(yR.hit?'ok':'bad')+');margin:4px 0">어제 '+(yR.hit?'맞음':'틀림')+'</p>'
           : '<div class="row" style="margin-top:6px"><button id="resYes">맞음</button><button class="sec" id="resNo">틀림</button></div>')
         +'</div>'):'')
+      +'<div class="row" id="ppDeck" style="margin:8px 0 4px">'+topics.map(function(x){
+        return '<button type="button" class="sec" data-deck="'+x+'" style="font-size:11px;padding:6px 8px'+(x===t?';border-color:var(--gold);color:var(--gold)':'')+(locked?';opacity:.55':'')+'">'+x+'</button>';
+      }).join('')+'</div>'
+      +'<p class="sub">고정 덱 10장 · 골라서 오늘 질문 · 베팅/지갑 없음</p>'
       +body
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 잠금 확률</p>':'')
       +'<button class="sec" id="pinTopic">주제 핀</button> '
@@ -179,6 +187,16 @@
       try{legionTrack('activate',{p:p})}catch(e){}
       card();
     };
+    Array.prototype.forEach.call(document.querySelectorAll('[data-deck]'),function(b){
+      b.onclick=function(){
+        if(lockGet()) return;
+        var x=b.getAttribute('data-deck');
+        if(!x || topics.indexOf(x)<0) return;
+        try{localStorage.setItem('pp_pick_'+dayKey(0),x);}catch(e){}
+        try{legionTrack('deck',{t:x})}catch(e){}
+        card();
+      };
+    });
     document.getElementById('pinTopic').onclick=function(){
       try{localStorage.setItem('pp_pin_topic',t);}catch(e){}
       if(locked) card({t:t,score:score,tone:tone}); else card();
