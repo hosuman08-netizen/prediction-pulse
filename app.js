@@ -204,6 +204,21 @@
     try{localStorage.setItem('pp_calib40',JSON.stringify(c));}catch(e){}
     return c;
   }
+  /* WAVE106: 60% bin (55–65). No stake. No betting. */
+  function in60(p){ p=+p; return p>=55 && p<=65; }
+  function calib60(){
+    try{
+      var c=JSON.parse(localStorage.getItem('pp_calib60')||'{"n":0,"hits":0}');
+      if(!c||typeof c!=='object') c={n:0,hits:0};
+      return {n:+c.n||0,hits:+c.hits||0};
+    }catch(e){return {n:0,hits:0};}
+  }
+  function calib60Add(hit){
+    var c=calib60();
+    c.n+=1; if(hit) c.hits+=1;
+    try{localStorage.setItem('pp_calib60',JSON.stringify(c));}catch(e){}
+    return c;
+  }
   function bumpStreak(){
     try{
       var s=JSON.parse(localStorage.getItem('pp_streak')||'{}');
@@ -239,7 +254,7 @@
     var pinList=pins();
     var tn=todayN(), ydn=+(localStorage.getItem('pp_day_'+dayKey(-1))||0);
     var goal=1, gPct=locked?100:0;
-    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70(), c50=calib50(), c90=calib90(), c30=calib30(), c10=calib10(), c80=calib80(), c20=calib20(), c40=calib40();
+    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70(), c50=calib50(), c90=calib90(), c30=calib30(), c10=calib10(), c80=calib80(), c20=calib20(), c40=calib40(), c60=calib60();
     var hitPct=cal.n?Math.round(cal.hits/cal.n*100):null;
     var pct70=c70.n?Math.round(c70.hits/c70.n*100):null;
     var pct50=c50.n?Math.round(c50.hits/c50.n*100):null;
@@ -249,6 +264,7 @@
     var pct80=c80.n?Math.round(c80.hits/c80.n*100):null;
     var pct20=c20.n?Math.round(c20.hits/c20.n*100):null;
     var pct40=c40.n?Math.round(c40.hits/c40.n*100):null;
+    var pct60=c60.n?Math.round(c60.hits/c60.n*100):null;
     var sparkHtml='';
     try{
       var recent=hist.slice(0,7).reverse();
@@ -368,6 +384,15 @@
         : '<p class="sub">40% 근처(35–45) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
           +'<div class="bar"><i style="width:0"></i></div>')
       +'</div>'
+      +'<div id="ppCalib60" style="margin:8px 0;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
+      +'<div class="chip">60% 캘리브</div>'
+      +(c60.n
+        ? '<p class="sub">내가 60% 했을 때 실제 적중 <b>'+pct60+'%</b> · '+c60.hits+'/'+c60.n+' · 기대 60% · 베팅 없음</p>'
+          +'<div class="bar" aria-label="actual hit rate when said 60%"><i style="width:'+pct60+'%"></i></div>'
+          +'<div class="bar" style="opacity:.35;margin-top:4px" aria-label="expected 60%"><i style="width:60%"></i></div>'
+        : '<p class="sub">60% 근처(55–65) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
+          +'<div class="bar"><i style="width:0"></i></div>')
+      +'</div>'
       +body
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 잠금 확률</p>':'')
       +'<button class="sec" id="pinTopic">'+(pinList.indexOf(t)>=0?'핀 해제':'주제 핀')+' · '+pinList.length+'/3</button> '
@@ -408,7 +433,8 @@
       if(y && in80(y.p)) calib80Add(!!hit);
       if(y && in20(y.p)) calib20Add(!!hit);
       if(y && in40(y.p)) calib40Add(!!hit);
-      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p)),bin50:!!(y&&in50(y.p)),bin90:!!(y&&in90(y.p)),bin30:!!(y&&in30(y.p)),bin10:!!(y&&in10(y.p)),bin80:!!(y&&in80(y.p)),bin20:!!(y&&in20(y.p)),bin40:!!(y&&in40(y.p))})}catch(e){}
+      if(y && in60(y.p)) calib60Add(!!hit);
+      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p)),bin50:!!(y&&in50(y.p)),bin90:!!(y&&in90(y.p)),bin30:!!(y&&in30(y.p)),bin10:!!(y&&in10(y.p)),bin80:!!(y&&in80(y.p)),bin20:!!(y&&in20(y.p)),bin40:!!(y&&in40(y.p)),bin60:!!(y&&in60(y.p))})}catch(e){}
       card();
     }
     var ry=document.getElementById('resYes'); if(ry) ry.onclick=function(){doRes(true);};
