@@ -129,6 +129,21 @@
     try{localStorage.setItem('pp_calib90',JSON.stringify(c));}catch(e){}
     return c;
   }
+  /* WAVE71: 30% bin (25–35). No stake. No betting. */
+  function in30(p){ p=+p; return p>=25 && p<=35; }
+  function calib30(){
+    try{
+      var c=JSON.parse(localStorage.getItem('pp_calib30')||'{"n":0,"hits":0}');
+      if(!c||typeof c!=='object') c={n:0,hits:0};
+      return {n:+c.n||0,hits:+c.hits||0};
+    }catch(e){return {n:0,hits:0};}
+  }
+  function calib30Add(hit){
+    var c=calib30();
+    c.n+=1; if(hit) c.hits+=1;
+    try{localStorage.setItem('pp_calib30',JSON.stringify(c));}catch(e){}
+    return c;
+  }
   function bumpStreak(){
     try{
       var s=JSON.parse(localStorage.getItem('pp_streak')||'{}');
@@ -164,11 +179,12 @@
     var pinList=pins();
     var tn=todayN(), ydn=+(localStorage.getItem('pp_day_'+dayKey(-1))||0);
     var goal=1, gPct=locked?100:0;
-    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70(), c50=calib50(), c90=calib90();
+    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70(), c50=calib50(), c90=calib90(), c30=calib30();
     var hitPct=cal.n?Math.round(cal.hits/cal.n*100):null;
     var pct70=c70.n?Math.round(c70.hits/c70.n*100):null;
     var pct50=c50.n?Math.round(c50.hits/c50.n*100):null;
     var pct90=c90.n?Math.round(c90.hits/c90.n*100):null;
+    var pct30=c30.n?Math.round(c30.hits/c30.n*100):null;
     var sparkHtml='';
     try{
       var recent=hist.slice(0,7).reverse();
@@ -243,6 +259,15 @@
         : '<p class="sub">90% 근처(85–95) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
           +'<div class="bar"><i style="width:0"></i></div>')
       +'</div>'
+      +'<div id="ppCalib30" style="margin:8px 0;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
+      +'<div class="chip">30% 캘리브</div>'
+      +(c30.n
+        ? '<p class="sub">내가 30% 했을 때 실제 적중 <b>'+pct30+'%</b> · '+c30.hits+'/'+c30.n+' · 기대 30% · 베팅 없음</p>'
+          +'<div class="bar" aria-label="actual hit rate when said 30%"><i style="width:'+pct30+'%"></i></div>'
+          +'<div class="bar" style="opacity:.35;margin-top:4px" aria-label="expected 30%"><i style="width:30%"></i></div>'
+        : '<p class="sub">30% 근처(25–35) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
+          +'<div class="bar"><i style="width:0"></i></div>')
+      +'</div>'
       +body
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 잠금 확률</p>':'')
       +'<button class="sec" id="pinTopic">'+(pinList.indexOf(t)>=0?'핀 해제':'주제 핀')+' · '+pinList.length+'/3</button> '
@@ -278,7 +303,8 @@
       if(y && in70(y.p)) calib70Add(!!hit);
       if(y && in50(y.p)) calib50Add(!!hit);
       if(y && in90(y.p)) calib90Add(!!hit);
-      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p)),bin50:!!(y&&in50(y.p)),bin90:!!(y&&in90(y.p))})}catch(e){}
+      if(y && in30(y.p)) calib30Add(!!hit);
+      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p)),bin50:!!(y&&in50(y.p)),bin90:!!(y&&in90(y.p)),bin30:!!(y&&in30(y.p))})}catch(e){}
       card();
     }
     var ry=document.getElementById('resYes'); if(ry) ry.onclick=function(){doRes(true);};
