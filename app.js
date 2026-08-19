@@ -84,6 +84,21 @@
     try{localStorage.setItem('pp_calib',JSON.stringify(c));}catch(e){}
     return c;
   }
+  /* WAVE53 GOLD50 #5: 70% bin (65–75). Metaculus/GJ track-record bar. No stake. */
+  function in70(p){ p=+p; return p>=65 && p<=75; }
+  function calib70(){
+    try{
+      var c=JSON.parse(localStorage.getItem('pp_calib70')||'{"n":0,"hits":0}');
+      if(!c||typeof c!=='object') c={n:0,hits:0};
+      return {n:+c.n||0,hits:+c.hits||0};
+    }catch(e){return {n:0,hits:0};}
+  }
+  function calib70Add(hit){
+    var c=calib70();
+    c.n+=1; if(hit) c.hits+=1;
+    try{localStorage.setItem('pp_calib70',JSON.stringify(c));}catch(e){}
+    return c;
+  }
   function bumpStreak(){
     try{
       var s=JSON.parse(localStorage.getItem('pp_streak')||'{}');
@@ -119,8 +134,9 @@
     var pinList=pins();
     var tn=todayN(), ydn=+(localStorage.getItem('pp_day_'+dayKey(-1))||0);
     var goal=1, gPct=locked?100:0;
-    var yL=yLock(), yR=resolveGet(-1), cal=calib();
+    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70();
     var hitPct=cal.n?Math.round(cal.hits/cal.n*100):null;
+    var pct70=c70.n?Math.round(c70.hits/c70.n*100):null;
     var sparkHtml='';
     try{
       var recent=hist.slice(0,7).reverse();
@@ -168,6 +184,15 @@
       }).join(''):'<span class="chip">워치 0/3 · 오늘 창에 다시 뜸</span>')
       +'</div>'
       +'<p class="sub">워치리스트 최대 3 · 탭=오늘 질문 재노출 · 현금화 없음</p>'
+      +'<div id="ppCalib70" style="margin:8px 0;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
+      +'<div class="chip">70% 캘리브</div>'
+      +(c70.n
+        ? '<p class="sub">내가 70% 했을 때 실제 적중 <b>'+pct70+'%</b> · '+c70.hits+'/'+c70.n+' · 기대 70% · 베팅 없음</p>'
+          +'<div class="bar" aria-label="actual hit rate when said 70%"><i style="width:'+pct70+'%"></i></div>'
+          +'<div class="bar" style="opacity:.35;margin-top:4px" aria-label="expected 70%"><i style="width:70%"></i></div>'
+        : '<p class="sub">70% 근처(65–75) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
+          +'<div class="bar"><i style="width:0"></i></div>')
+      +'</div>'
       +body
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 잠금 확률</p>':'')
       +'<button class="sec" id="pinTopic">'+(pinList.indexOf(t)>=0?'핀 해제':'주제 핀')+' · '+pinList.length+'/3</button> '
@@ -197,9 +222,11 @@
     }
     function doRes(hit){
       if(resolveGet(-1)) return;
-      resolveSet(-1,{hit:!!hit,ts:Date.now()});
+      var y=yLock();
+      resolveSet(-1,{hit:!!hit,ts:Date.now(),p:y?y.p:null});
       calibAdd(!!hit);
-      try{legionTrack('resolve',{hit:!!hit})}catch(e){}
+      if(y && in70(y.p)) calib70Add(!!hit);
+      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p))})}catch(e){}
       card();
     }
     var ry=document.getElementById('resYes'); if(ry) ry.onclick=function(){doRes(true);};
