@@ -99,6 +99,21 @@
     try{localStorage.setItem('pp_calib70',JSON.stringify(c));}catch(e){}
     return c;
   }
+  /* WAVE59 GOLD50 #5 next: 50% bin (45–55). No stake. No betting. */
+  function in50(p){ p=+p; return p>=45 && p<=55; }
+  function calib50(){
+    try{
+      var c=JSON.parse(localStorage.getItem('pp_calib50')||'{"n":0,"hits":0}');
+      if(!c||typeof c!=='object') c={n:0,hits:0};
+      return {n:+c.n||0,hits:+c.hits||0};
+    }catch(e){return {n:0,hits:0};}
+  }
+  function calib50Add(hit){
+    var c=calib50();
+    c.n+=1; if(hit) c.hits+=1;
+    try{localStorage.setItem('pp_calib50',JSON.stringify(c));}catch(e){}
+    return c;
+  }
   function bumpStreak(){
     try{
       var s=JSON.parse(localStorage.getItem('pp_streak')||'{}');
@@ -134,9 +149,10 @@
     var pinList=pins();
     var tn=todayN(), ydn=+(localStorage.getItem('pp_day_'+dayKey(-1))||0);
     var goal=1, gPct=locked?100:0;
-    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70();
+    var yL=yLock(), yR=resolveGet(-1), cal=calib(), c70=calib70(), c50=calib50();
     var hitPct=cal.n?Math.round(cal.hits/cal.n*100):null;
     var pct70=c70.n?Math.round(c70.hits/c70.n*100):null;
+    var pct50=c50.n?Math.round(c50.hits/c50.n*100):null;
     var sparkHtml='';
     try{
       var recent=hist.slice(0,7).reverse();
@@ -193,6 +209,15 @@
         : '<p class="sub">70% 근처(65–75) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
           +'<div class="bar"><i style="width:0"></i></div>')
       +'</div>'
+      +'<div id="ppCalib50" style="margin:8px 0;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
+      +'<div class="chip">50% 캘리브</div>'
+      +(c50.n
+        ? '<p class="sub">내가 50% 했을 때 실제 적중 <b>'+pct50+'%</b> · '+c50.hits+'/'+c50.n+' · 기대 50% · 베팅 없음</p>'
+          +'<div class="bar" aria-label="actual hit rate when said 50%"><i style="width:'+pct50+'%"></i></div>'
+          +'<div class="bar" style="opacity:.35;margin-top:4px" aria-label="expected 50%"><i style="width:50%"></i></div>'
+        : '<p class="sub">50% 근처(45–55) 잠금 후 어제 해상하면 막대가 쌓임 · 현금화 없음</p>'
+          +'<div class="bar"><i style="width:0"></i></div>')
+      +'</div>'
       +body
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 잠금 확률</p>':'')
       +'<button class="sec" id="pinTopic">'+(pinList.indexOf(t)>=0?'핀 해제':'주제 핀')+' · '+pinList.length+'/3</button> '
@@ -226,7 +251,8 @@
       resolveSet(-1,{hit:!!hit,ts:Date.now(),p:y?y.p:null});
       calibAdd(!!hit);
       if(y && in70(y.p)) calib70Add(!!hit);
-      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p))})}catch(e){}
+      if(y && in50(y.p)) calib50Add(!!hit);
+      try{legionTrack('resolve',{hit:!!hit,bin70:!!(y&&in70(y.p)),bin50:!!(y&&in50(y.p))})}catch(e){}
       card();
     }
     var ry=document.getElementById('resYes'); if(ry) ry.onclick=function(){doRes(true);};
