@@ -45,6 +45,32 @@
   function resolveGet(off){ try{ return JSON.parse(localStorage.getItem(resolveKey(off))||'null'); }catch(e){ return null; } }
   function resolveSet(off,obj){ try{ localStorage.setItem(resolveKey(off), JSON.stringify(obj)); }catch(e){} }
   function yLock(){ try{ return JSON.parse(localStorage.getItem('pp_lock_'+dayKey(-1))||'null'); }catch(e){ return null; } }
+  function pins(){
+    var a=[];
+    try{
+      a=JSON.parse(localStorage.getItem('pp_pins')||'[]');
+      if(!Array.isArray(a)) a=[];
+    }catch(e){ a=[]; }
+    a=a.filter(function(x){ return topics.indexOf(x)>=0; });
+    try{
+      var old=localStorage.getItem('pp_pin_topic')||'';
+      if(old && topics.indexOf(old)>=0 && a.indexOf(old)<0) a.unshift(old);
+    }catch(e){}
+    return a.slice(0,3);
+  }
+  function pinSet(arr){
+    var a=(arr||[]).filter(function(x){ return topics.indexOf(x)>=0; }).slice(0,3);
+    try{ localStorage.setItem('pp_pins',JSON.stringify(a)); }catch(e){}
+    return a;
+  }
+  function pinToggle(t){
+    if(topics.indexOf(t)<0) return pins();
+    var a=pins();
+    var i=a.indexOf(t);
+    if(i>=0) a.splice(i,1);
+    else { if(a.length>=3) a.pop(); a.unshift(t); }
+    return pinSet(a);
+  }
   function calib(){
     try{
       var c=JSON.parse(localStorage.getItem('pp_calib')||'{"n":0,"hits":0}');
@@ -90,7 +116,7 @@
     var c=s.count||0;
     var ready=!s.shieldLast||((new Date(dayKey(0))-new Date(s.shieldLast))/86400000)>=7;
     var wa=weekAvg();
-    var pinnedTopic=localStorage.getItem('pp_pin_topic')||'';
+    var pinList=pins();
     var tn=todayN(), ydn=+(localStorage.getItem('pp_day_'+dayKey(-1))||0);
     var goal=1, gPct=locked?100:0;
     var yL=yLock(), yR=resolveGet(-1), cal=calib();
@@ -121,7 +147,7 @@
       +'<div class="chip">기록 '+hist.length+'</div><div class="chip">최고 '+(localStorage.getItem('pp_best')||'-')+'</div>'
       +'<div class="chip">7일 평균 '+(wa||'-')+'</div>'
       +'<div class="chip">🔥 '+c+'일'+(c>=3&&ready?' · 🛡️':'')+'</div>'
-      +(pinnedTopic?'<div class="chip">핀 주제 '+pinnedTopic+'</div>':'')
+      +(pinList.length?'<div class="chip">워치 '+pinList.length+'/3</div>':'')
       +'<div class="chip">적중 '+(hitPct==null?'-':hitPct+'%')+(cal.n?' · '+cal.hits+'/'+cal.n:'')+'</div>'
       +'<div style="height:6px;background:#1c1826;border-radius:4px;margin:8px 0;overflow:hidden"><i style="display:block;height:100%;width:'+gPct+'%;background:linear-gradient(90deg,#e0b552,#fbbf24)"></i></div>'
       +(yL?('<div style="margin:8px 0;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
@@ -136,9 +162,15 @@
         return '<button type="button" class="sec" data-deck="'+x+'" style="font-size:11px;padding:6px 8px'+(x===t?';border-color:var(--gold);color:var(--gold)':'')+(locked?';opacity:.55':'')+'">'+x+'</button>';
       }).join('')+'</div>'
       +'<p class="sub">고정 덱 10장 · 골라서 오늘 질문 · 베팅/지갑 없음</p>'
+      +'<div class="row" id="ppWatch" style="margin:4px 0 8px">'
+      +(pinList.length?pinList.map(function(x){
+        return '<button type="button" class="sec" data-watch="'+x+'" style="font-size:11px;padding:6px 8px'+(x===t?';border-color:var(--gold);color:var(--gold)':'')+'">📌 '+x+'</button>';
+      }).join(''):'<span class="chip">워치 0/3 · 오늘 창에 다시 뜸</span>')
+      +'</div>'
+      +'<p class="sub">워치리스트 최대 3 · 탭=오늘 질문 재노출 · 현금화 없음</p>'
       +body
       +(sparkHtml?'<div class="row" style="gap:3px;margin:10px 0;align-items:flex-end;height:44px">'+sparkHtml+'</div><p class="sub">최근 잠금 확률</p>':'')
-      +'<button class="sec" id="pinTopic">주제 핀</button> '
+      +'<button class="sec" id="pinTopic">'+(pinList.indexOf(t)>=0?'핀 해제':'주제 핀')+' · '+pinList.length+'/3</button> '
       +(locked?'<button class="sec" id="undoPred">↩ 잠금 해제</button> ':'')
       +'<button class="sec" id="share">공유 텍스트</button>'
       +(locked?'<div id="sharePeak" style="margin-top:12px;padding:10px;border:1px solid #e0b55244;border-radius:12px">'
@@ -197,10 +229,20 @@
         card();
       };
     });
+    Array.prototype.forEach.call(document.querySelectorAll('[data-watch]'),function(b){
+      b.onclick=function(){
+        if(lockGet()) return;
+        var x=b.getAttribute('data-watch');
+        if(!x || topics.indexOf(x)<0) return;
+        try{localStorage.setItem('pp_pick_'+dayKey(0),x);}catch(e){}
+        try{legionTrack('watch',{t:x})}catch(e){}
+        card();
+      };
+    });
     document.getElementById('pinTopic').onclick=function(){
-      try{localStorage.setItem('pp_pin_topic',t);}catch(e){}
+      pinToggle(t);
       if(locked) card({t:t,score:score,tone:tone}); else card();
-      try{legionTrack('pin',{t:t})}catch(e){}
+      try{legionTrack('pin',{t:t,n:pins().length})}catch(e){}
     };
     var up=document.getElementById('undoPred');
     if(up) up.onclick=function(){
