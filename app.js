@@ -406,7 +406,7 @@
       +'<div style="color:#e0b552;font-weight:700;margin-bottom:4px">💎 예측 더 깊게</div>'
       +'<a style="color:#ece8f1;margin:0 6px" href="https://hosuman08-netizen.github.io/saju-miniapp/?utm_source=pulse&utm_medium=pipe">🔮 사주</a>'
       +'<a style="color:#ece8f1;margin:0 6px" href="https://hosuman08-netizen.github.io/budget-pulse/?utm_source=pulse&utm_medium=pipe">💓 Budget</a>'
-      +'<a style="color:#e0b552;margin:0 6px" href="https://hosuman08-netizen.github.io/legion-hub/?utm_source=pulse&utm_medium=pipe">🎮 Arcade</a>'
+      +''
       +'</div></div>';
     if(hist.length){
       document.getElementById('histList').innerHTML=hist.slice(0,6).map(function(h,i){
